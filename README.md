@@ -12,19 +12,8 @@ A simple example of generating CSR programatically. This project was tested with
 > mvn clean package
 
 - Put the resulting jar in your classpath
-- Add these dependencies in your pom.xml:
-<dependency>
-   <groupId>org.bouncycastle</groupId>
-   <artifactId>bcpkix-jdk15on</artifactId>
-   <version>1.60</version>
-  </dependency>
-  <dependency>
-   <groupId>org.ejbca.cesecore</groupId>
-   <artifactId>cesecore-common</artifactId>
-   <version>7.0.0.1</version>
-  </dependency>
+- Add dependencies in your pom.xml as in the pom.xml of the project
   
-
 ## Configuration
 N/A
 
