@@ -79,7 +79,64 @@ public class CsrTools {
             //Create CertRequestInfo
             CertificationRequestInfo info = new CertificationRequestInfo(
                     X500Name.getInstance(subjectDnX500.getEncoded()),                     
-                    SubjectPublicKeyInfo.getInstance(pubKey.getEncoded()), new DERSet(v));
+                    SubjectPublicKeyInfo.getInstance(pubKey.getEncoded()), attrSet);
+            
+            //Signed CertRequest
+            Signature privateSignature = Signature.getInstance("SHA256withRSA");
+            privateSignature.initSign(privKey);
+            privateSignature.update(info.getEncoded());
+            
+            byte[] signedRequest = privateSignature.sign();
+            
+            //Create Final CSR Request
+            AlgorithmIdentifier algo1=AlgorithmIdentifier.getInstance(
+                    new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA")); 
+            PKCS10CertificationRequest csr=new PKCS10CertificationRequest(
+                    new CertificationRequest(info, algo1, new DERBitString(signedRequest)));
+            
+            return csr;
+
+        }
+        catch(Exception e)  {
+            e.printStackTrace();
+            return null;
+            
+        }
+    }
+
+    public  static PKCS10CertificationRequest createCsrSanEmail(String subjectDN,String email,
+            PrivateKey privKey,PublicKey pubKey)    {
+
+        try {
+            //Create SubjectDN here
+            X500Principal subjectDnX500 = new X500Principal (subjectDN);
+
+            //Create CSR Request Struct
+            PKCS10CertificationRequestBuilder req=new JcaPKCS10CertificationRequestBuilder(subjectDnX500,pubKey);
+            
+            //Create OtherName Tag with RFC4683 Value
+            GeneralName otherName=new GeneralName(GeneralName.rfc822Name,
+                    new DEROctetString(email.getBytes()));
+            GeneralNames subjectAltName = new GeneralNames(otherName);
+            
+            //Create SAN Extension
+            Vector oid2 = new Vector();
+            Vector value2 = new Vector();
+
+            oid2.add(Extension.subjectAlternativeName);
+            value2.add(new X509Extension(false, new DEROctetString(subjectAltName)));
+            X509Extensions extensions2=new X509Extensions(oid2, value2);
+            
+            //Create attribute set for CSR
+            ASN1EncodableVector v = new ASN1EncodableVector();
+            v.add(new Attribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest,new DERSet(extensions2)));
+            
+            DERSet attrSet=new DERSet(v);
+            
+            //Create CertRequestInfo
+            CertificationRequestInfo info = new CertificationRequestInfo(
+                    X500Name.getInstance(subjectDnX500.getEncoded()),                     
+                    SubjectPublicKeyInfo.getInstance(pubKey.getEncoded()), attrSet);
             
             //Signed CertRequest
             Signature privateSignature = Signature.getInstance("SHA256withRSA");
